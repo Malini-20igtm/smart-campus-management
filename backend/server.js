@@ -6,10 +6,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-    res.send("Smart Campus Backend is Running!");
-});
-
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to Smart Campus Management',
+    status: 'success'
+  })
+})
 const PORT = 5000;
 
 app.listen(PORT, () => {
