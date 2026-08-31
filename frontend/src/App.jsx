@@ -1,75 +1,160 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 function App() {
-  const [campus, setCampus] = useState(null);
-  const [showDetails, setShowDetails] = useState(false);
+  const [student, setStudent] = useState({
+    name: "",
+    email: "",
+    rollNumber: "",
+    department: "",
+    year: "",
+  });
 
-  const getCampus = async () => {
-    const response = await fetch("http://localhost:5000/api/campus");
-    const data = await response.json();
-    setCampus(data);
+  const [students, setStudents] = useState([]);
+
+  // Get students from backend
+  const getStudents = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/students");
+      const data = await response.json();
+
+      console.log("Students:", data);
+
+      setStudents(data.students);
+    } catch (error) {
+      console.error("Error fetching students:", error);
+    }
   };
 
-  const student = {
-    name: "Malini",
-    studentId: "ST101",
-    department: "CSE",
-    attendance: "85%",
-    status: "Active"
+  // Load students when page opens
+  useEffect(() => {
+    getStudents();
+  }, []);
+
+  const handleChange = (e) => {
+    setStudent({
+      ...student,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch("http://localhost:5000/api/students", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(student),
+      });
+
+      const data = await response.json();
+
+      console.log("Backend Response:", data);
+
+      if (data.success) {
+        alert("Student added successfully!");
+
+        // Clear form
+        setStudent({
+          name: "",
+          email: "",
+          rollNumber: "",
+          department: "",
+          year: "",
+        });
+
+        // Refresh student list
+        getStudents();
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
   return (
     <div className="container">
       <h1>Smart Campus Management</h1>
 
-      <button onClick={getCampus}>
-        Get Campus Data
-      </button>
+      <h2>Add Student</h2>
 
-      {campus && (
-        <div className="card">
-          <h2>Campus Data</h2>
-          <p>College: {campus.college}</p>
-          <p>Students: {campus.students}</p>
-          <p>Faculty: {campus.faculty}</p>
-          <p>Departments: {campus.departments}</p>
-        </div>
-      )}
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          name="name"
+          placeholder="Student Name"
+          value={student.name}
+          onChange={handleChange}
+        />
 
-      <hr />
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={student.email}
+          onChange={handleChange}
+        />
 
-      <div className="card">
-        <h2>Student Details</h2>
+        <input
+          type="text"
+          name="rollNumber"
+          placeholder="Roll Number"
+          value={student.rollNumber}
+          onChange={handleChange}
+        />
 
-        <p>Name: {student.name}</p>
-        <p>Student ID: {student.studentId}</p>
-        <p>Department: {student.department}</p>
-        <p>Attendance: {student.attendance}</p>
-        <p>Status: {student.status}</p>
+        <input
+          type="text"
+          name="department"
+          placeholder="Department"
+          value={student.department}
+          onChange={handleChange}
+        />
 
-        <button onClick={() => setShowDetails(!showDetails)}>
-          {showDetails ? "Hide Details" : "Show Details"}
-        </button>
-      </div>
+        <input
+          type="text"
+          name="year"
+          placeholder="Year"
+          value={student.year}
+          onChange={handleChange}
+        />
 
-      {showDetails && (
-        <div className="card">
-          <h2>Subjects</h2>
+        <button type="submit">Add Student</button>
+      </form>
 
-          <ul>
-            <li>Python - Completed</li>
-            <li>Java - In Progress</li>
-            <li>Database Management - Completed</li>
-            <li>Web Development - In Progress</li>
-          </ul>
+      <h2>Student List</h2>
 
-          <h2>Assignments</h2>
+      {students.length === 0 ? (
+        <p>No students found.</p>
+      ) : (
+        <div>
+          {students.map((item) => (
+            <div key={item._id}>
+              <p>
+                <strong>Name:</strong> {item.name}
+              </p>
 
-          <p>Python Assignment: Submitted</p>
-          <p>Java Assignment: Pending</p>
-          <p>Web Development Assignment: Submitted</p>
+              <p>
+                <strong>Email:</strong> {item.email}
+              </p>
+
+              <p>
+                <strong>Roll Number:</strong> {item.rollNumber}
+              </p>
+
+              <p>
+                <strong>Department:</strong> {item.department}
+              </p>
+
+              <p>
+                <strong>Year:</strong> {item.year}
+              </p>
+
+              <hr />
+            </div>
+          ))}
         </div>
       )}
     </div>
