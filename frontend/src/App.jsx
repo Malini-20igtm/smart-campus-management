@@ -31,6 +31,7 @@ function App() {
     getStudents();
   }, []);
 
+  // Handle input changes
   const handleChange = (e) => {
     setStudent({
       ...student,
@@ -38,6 +39,7 @@ function App() {
     });
   };
 
+  // Add student
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -78,6 +80,7 @@ function App() {
     <div className="container">
       <h1>Smart Campus Management</h1>
 
+      {/* Add Student */}
       <h2>Add Student</h2>
 
       <form onSubmit={handleSubmit}>
@@ -124,17 +127,16 @@ function App() {
         <button type="submit">Add Student</button>
       </form>
 
+      {/* Student List */}
       <h2>Student List</h2>
 
       {students.length === 0 ? (
         <p>No students found.</p>
       ) : (
-        <div>
+        <div className="student-list">
           {students.map((item) => (
-            <div key={item._id}>
-              <p>
-                <strong>Name:</strong> {item.name}
-              </p>
+            <div className="student-card" key={item._id}>
+              <h3>{item.name}</h3>
 
               <p>
                 <strong>Email:</strong> {item.email}
@@ -151,8 +153,6 @@ function App() {
               <p>
                 <strong>Year:</strong> {item.year}
               </p>
-
-              <hr />
             </div>
           ))}
         </div>
