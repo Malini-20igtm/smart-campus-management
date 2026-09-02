@@ -40,10 +40,12 @@ function App() {
   };
 
   // Add student
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
+  console.log("Student Data:", student);
+
+  try {
       const response = await fetch("http://localhost:5000/api/students", {
         method: "POST",
         headers: {
