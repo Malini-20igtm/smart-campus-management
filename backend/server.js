@@ -92,6 +92,21 @@ app.post("/api/students", async (req, res) => {
     });
   }
 });
+app.delete("/api/students/:id", async (req, res) => {
+  try {
+    await Student.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Student deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
 
 // Start server
 const PORT = 5000;

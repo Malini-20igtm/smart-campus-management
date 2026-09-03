@@ -40,19 +40,22 @@ function App() {
   };
 
   // Add student
- const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  console.log("Student Data:", student);
+    console.log("Student Data:", student);
 
-  try {
-      const response = await fetch("http://localhost:5000/api/students", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(student),
-      });
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/students",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(student),
+        }
+      );
 
       const data = await response.json();
 
@@ -75,6 +78,33 @@ function App() {
       }
     } catch (error) {
       console.error("Error:", error);
+    }
+  };
+
+  // Delete student
+  const deleteStudent = async (id) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/students/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("Delete Response:", data);
+
+      if (data.success) {
+        alert("Student deleted successfully!");
+
+        // Remove student from screen
+        setStudents(
+          students.filter((student) => student._id !== id)
+        );
+      }
+    } catch (error) {
+      console.error("Delete Error:", error);
     }
   };
 
@@ -155,6 +185,11 @@ function App() {
               <p>
                 <strong>Year:</strong> {item.year}
               </p>
+
+              {/* Delete Button */}
+              <button onClick={() => deleteStudent(item._id)}>
+                Delete
+              </button>
             </div>
           ))}
         </div>
