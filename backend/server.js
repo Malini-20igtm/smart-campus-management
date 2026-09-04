@@ -107,6 +107,51 @@ app.delete("/api/students/:id", async (req, res) => {
     });
   }
 });
+// Update student
+app.put("/api/students/:id", async (req, res) => {
+  try {
+    const { name, email, rollNumber, department, year } = req.body;
+
+    if (!name || !email || !rollNumber || !department || !year) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    const updatedStudent = await Student.findByIdAndUpdate(
+      req.params.id,
+      {
+        name,
+        email,
+        rollNumber,
+        department,
+        year,
+      },
+      { new: true }
+    );
+
+    if (!updatedStudent) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Student updated successfully",
+      student: updatedStudent,
+    });
+  } catch (error) {
+    console.error("UPDATE STUDENT ERROR:", error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 
 // Start server
 const PORT = 5000;

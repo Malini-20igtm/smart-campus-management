@@ -12,6 +12,9 @@ function App() {
 
   const [students, setStudents] = useState([]);
 
+  // Store the ID of the student being edited
+  const [editId, setEditId] = useState(null);
+
   // Get students from backend
   const getStudents = async () => {
     try {
@@ -108,14 +111,70 @@ function App() {
     }
   };
 
+  // Edit student
+  const editStudent = (item) => {
+    setStudent({
+      name: item.name,
+      email: item.email,
+      rollNumber: item.rollNumber,
+      department: item.department,
+      year: item.year,
+    });
+
+    setEditId(item._id);
+  };
+
+  // Update student
+  const updateStudent = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/students/${editId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(student),
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("Update Response:", data);
+
+      if (data.success) {
+        alert("Student updated successfully!");
+
+        // Clear form
+        setStudent({
+          name: "",
+          email: "",
+          rollNumber: "",
+          department: "",
+          year: "",
+        });
+
+        // Exit edit mode
+        setEditId(null);
+
+        // Refresh student list
+        getStudents();
+      }
+    } catch (error) {
+      console.error("Update Error:", error);
+    }
+  };
+
   return (
     <div className="container">
       <h1>Smart Campus Management</h1>
 
-      {/* Add Student */}
-      <h2>Add Student</h2>
+      {/* Add / Update Student */}
+      <h2>{editId ? "Edit Student" : "Add Student"}</h2>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={editId ? updateStudent : handleSubmit}>
         <input
           type="text"
           name="name"
@@ -156,7 +215,28 @@ function App() {
           onChange={handleChange}
         />
 
-        <button type="submit">Add Student</button>
+        <button type="submit">
+          {editId ? "Update Student" : "Add Student"}
+        </button>
+
+        {/* Cancel Edit */}
+        {editId && (
+          <button
+            type="button"
+            onClick={() => {
+              setEditId(null);
+              setStudent({
+                name: "",
+                email: "",
+                rollNumber: "",
+                department: "",
+                year: "",
+              });
+            }}
+          >
+            Cancel
+          </button>
+        )}
       </form>
 
       {/* Student List */}
@@ -185,6 +265,11 @@ function App() {
               <p>
                 <strong>Year:</strong> {item.year}
               </p>
+
+              {/* Edit Button */}
+              <button onClick={() => editStudent(item)}>
+                Edit
+              </button>
 
               {/* Delete Button */}
               <button onClick={() => deleteStudent(item._id)}>
