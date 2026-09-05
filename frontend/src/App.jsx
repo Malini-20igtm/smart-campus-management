@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import "./App.css";
 
@@ -12,6 +13,9 @@ function App() {
 
   const [students, setStudents] = useState([]);
   const [editingId, setEditingId] = useState(null);
+
+  // Selected student for View Details
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   // Get students from backend
   const getStudents = async () => {
@@ -95,7 +99,7 @@ function App() {
         // Exit edit mode
         setEditingId(null);
 
-        // Refresh student list
+        // Refresh students
         getStudents();
       } else {
         alert(data.error || data.message || "Something went wrong");
@@ -136,7 +140,7 @@ function App() {
       if (data.success) {
         alert("Student deleted successfully!");
 
-        // Refresh list
+        // Refresh students
         getStudents();
       } else {
         alert(data.error || "Failed to delete student");
@@ -158,6 +162,17 @@ function App() {
     });
 
     setEditingId(null);
+  };
+
+  // View student details
+  const handleView = (student) => {
+    console.log("Selected student:", student);
+    setSelectedStudent(student);
+  };
+
+  // Close student details
+  const handleCloseDetails = () => {
+    setSelectedStudent(null);
   };
 
   return (
@@ -251,13 +266,50 @@ function App() {
                 <strong>Year:</strong> {s.year}
               </p>
 
-              <button onClick={() => handleEdit(s)}>Edit</button>
+              <button onClick={() => handleView(s)}>
+                View Details
+              </button>
+
+              <button onClick={() => handleEdit(s)}>
+                Edit
+              </button>
 
               <button onClick={() => handleDelete(s._id)}>
                 Delete
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* View Student Details */}
+      {selectedStudent && (
+        <div className="student-details">
+          <h2>Student Details</h2>
+
+          <p>
+            <strong>Name:</strong> {selectedStudent.name}
+          </p>
+
+          <p>
+            <strong>Email:</strong> {selectedStudent.email}
+          </p>
+
+          <p>
+            <strong>Roll Number:</strong> {selectedStudent.rollNumber}
+          </p>
+
+          <p>
+            <strong>Department:</strong> {selectedStudent.department}
+          </p>
+
+          <p>
+            <strong>Year:</strong> {selectedStudent.year}
+          </p>
+
+          <button onClick={handleCloseDetails}>
+            Close
+          </button>
         </div>
       )}
     </div>
