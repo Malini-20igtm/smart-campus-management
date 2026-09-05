@@ -110,6 +110,33 @@ app.delete("/api/students/:id", async (req, res) => {
 // Update student
 app.put("/api/students/:id", async (req, res) => {
   try {
+    const updatedStudent = await Student.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    if (!updatedStudent) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      student: updatedStudent,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+// Update student
+app.put("/api/students/:id", async (req, res) => {
+  try {
     const { name, email, rollNumber, department, year } = req.body;
 
     if (!name || !email || !rollNumber || !department || !year) {

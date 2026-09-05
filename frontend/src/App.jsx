@@ -11,9 +11,7 @@ function App() {
   });
 
   const [students, setStudents] = useState([]);
-
-  // Store the ID of the student being edited
-  const [editId, setEditId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
 
   // Get students from backend
   const getStudents = async () => {
@@ -23,7 +21,9 @@ function App() {
 
       console.log("Students:", data);
 
-      setStudents(data.students);
+      if (data.success) {
+        setStudents(data.students);
+      }
     } catch (error) {
       console.error("Error fetching students:", error);
     }
@@ -42,30 +42,46 @@ function App() {
     });
   };
 
-  // Add student
+  // Add or Update student
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("Student Data:", student);
-
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/students",
-        {
+      let response;
+
+      if (editingId) {
+        // Update student
+        response = await fetch(
+          `http://localhost:5000/api/students/${editingId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(student),
+          }
+        );
+      } else {
+        // Add student
+        response = await fetch("http://localhost:5000/api/students", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(student),
-        }
-      );
+        });
+      }
 
       const data = await response.json();
 
       console.log("Backend Response:", data);
 
       if (data.success) {
-        alert("Student added successfully!");
+        alert(
+          editingId
+            ? "Student updated successfully!"
+            : "Student added successfully!"
+        );
 
         // Clear form
         setStudent({
@@ -76,16 +92,35 @@ function App() {
           year: "",
         });
 
+        // Exit edit mode
+        setEditingId(null);
+
         // Refresh student list
         getStudents();
+      } else {
+        alert(data.error || data.message || "Something went wrong");
       }
     } catch (error) {
       console.error("Error:", error);
+      alert("Server error");
     }
   };
 
+  // Edit student
+  const handleEdit = (student) => {
+    setStudent({
+      name: student.name,
+      email: student.email,
+      rollNumber: student.rollNumber,
+      department: student.department,
+      year: student.year,
+    });
+
+    setEditingId(student._id);
+  };
+
   // Delete student
-  const deleteStudent = async (id) => {
+  const handleDelete = async (id) => {
     try {
       const response = await fetch(
         `http://localhost:5000/api/students/${id}`,
@@ -101,86 +136,44 @@ function App() {
       if (data.success) {
         alert("Student deleted successfully!");
 
-        // Remove student from screen
-        setStudents(
-          students.filter((student) => student._id !== id)
-        );
+        // Refresh list
+        getStudents();
+      } else {
+        alert(data.error || "Failed to delete student");
       }
     } catch (error) {
-      console.error("Delete Error:", error);
+      console.error("Delete error:", error);
+      alert("Server error");
     }
   };
 
-  // Edit student
-  const editStudent = (item) => {
+  // Cancel edit
+  const handleCancel = () => {
     setStudent({
-      name: item.name,
-      email: item.email,
-      rollNumber: item.rollNumber,
-      department: item.department,
-      year: item.year,
+      name: "",
+      email: "",
+      rollNumber: "",
+      department: "",
+      year: "",
     });
 
-    setEditId(item._id);
-  };
-
-  // Update student
-  const updateStudent = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/students/${editId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(student),
-        }
-      );
-
-      const data = await response.json();
-
-      console.log("Update Response:", data);
-
-      if (data.success) {
-        alert("Student updated successfully!");
-
-        // Clear form
-        setStudent({
-          name: "",
-          email: "",
-          rollNumber: "",
-          department: "",
-          year: "",
-        });
-
-        // Exit edit mode
-        setEditId(null);
-
-        // Refresh student list
-        getStudents();
-      }
-    } catch (error) {
-      console.error("Update Error:", error);
-    }
+    setEditingId(null);
   };
 
   return (
     <div className="container">
       <h1>Smart Campus Management</h1>
 
-      {/* Add / Update Student */}
-      <h2>{editId ? "Edit Student" : "Add Student"}</h2>
+      <h2>{editingId ? "Edit Student" : "Add Student"}</h2>
 
-      <form onSubmit={editId ? updateStudent : handleSubmit}>
+      <form onSubmit={handleSubmit}>
         <input
           type="text"
           name="name"
           placeholder="Student Name"
           value={student.name}
           onChange={handleChange}
+          required
         />
 
         <input
@@ -189,6 +182,7 @@ function App() {
           placeholder="Email"
           value={student.email}
           onChange={handleChange}
+          required
         />
 
         <input
@@ -197,6 +191,7 @@ function App() {
           placeholder="Roll Number"
           value={student.rollNumber}
           onChange={handleChange}
+          required
         />
 
         <input
@@ -205,6 +200,7 @@ function App() {
           placeholder="Department"
           value={student.department}
           onChange={handleChange}
+          required
         />
 
         <input
@@ -213,66 +209,51 @@ function App() {
           placeholder="Year"
           value={student.year}
           onChange={handleChange}
+          required
         />
 
         <button type="submit">
-          {editId ? "Update Student" : "Add Student"}
+          {editingId ? "Update Student" : "Add Student"}
         </button>
 
-        {/* Cancel Edit */}
-        {editId && (
-          <button
-            type="button"
-            onClick={() => {
-              setEditId(null);
-              setStudent({
-                name: "",
-                email: "",
-                rollNumber: "",
-                department: "",
-                year: "",
-              });
-            }}
-          >
+        {editingId && (
+          <button type="button" onClick={handleCancel}>
             Cancel
           </button>
         )}
       </form>
 
-      {/* Student List */}
       <h2>Student List</h2>
 
       {students.length === 0 ? (
         <p>No students found.</p>
       ) : (
-        <div className="student-list">
-          {students.map((item) => (
-            <div className="student-card" key={item._id}>
-              <h3>{item.name}</h3>
-
+        <div>
+          {students.map((s) => (
+            <div className="student-card" key={s._id}>
               <p>
-                <strong>Email:</strong> {item.email}
+                <strong>Name:</strong> {s.name}
               </p>
 
               <p>
-                <strong>Roll Number:</strong> {item.rollNumber}
+                <strong>Email:</strong> {s.email}
               </p>
 
               <p>
-                <strong>Department:</strong> {item.department}
+                <strong>Roll Number:</strong> {s.rollNumber}
               </p>
 
               <p>
-                <strong>Year:</strong> {item.year}
+                <strong>Department:</strong> {s.department}
               </p>
 
-              {/* Edit Button */}
-              <button onClick={() => editStudent(item)}>
-                Edit
-              </button>
+              <p>
+                <strong>Year:</strong> {s.year}
+              </p>
 
-              {/* Delete Button */}
-              <button onClick={() => deleteStudent(item._id)}>
+              <button onClick={() => handleEdit(s)}>Edit</button>
+
+              <button onClick={() => handleDelete(s._id)}>
                 Delete
               </button>
             </div>
