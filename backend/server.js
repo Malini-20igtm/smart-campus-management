@@ -92,31 +92,13 @@ app.post("/api/students", async (req, res) => {
     });
   }
 });
+
+// Delete student
 app.delete("/api/students/:id", async (req, res) => {
   try {
-    await Student.findByIdAndDelete(req.params.id);
+    const deletedStudent = await Student.findByIdAndDelete(req.params.id);
 
-    res.json({
-      success: true,
-      message: "Student deleted successfully",
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-});
-// Update student
-app.put("/api/students/:id", async (req, res) => {
-  try {
-    const updatedStudent = await Student.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-
-    if (!updatedStudent) {
+    if (!deletedStudent) {
       return res.status(404).json({
         success: false,
         message: "Student not found",
@@ -125,20 +107,24 @@ app.put("/api/students/:id", async (req, res) => {
 
     res.json({
       success: true,
-      student: updatedStudent,
+      message: "Student deleted successfully",
     });
   } catch (error) {
+    console.error("DELETE STUDENT ERROR:", error);
+
     res.status(500).json({
       success: false,
       error: error.message,
     });
   }
 });
+
 // Update student
 app.put("/api/students/:id", async (req, res) => {
   try {
     const { name, email, rollNumber, department, year } = req.body;
 
+    // Check all fields
     if (!name || !email || !rollNumber || !department || !year) {
       return res.status(400).json({
         success: false,
@@ -155,7 +141,9 @@ app.put("/api/students/:id", async (req, res) => {
         department,
         year,
       },
-      { new: true }
+      {
+        new: true,
+      }
     );
 
     if (!updatedStudent) {

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import "./App.css";
 
@@ -14,7 +13,7 @@ function App() {
   const [students, setStudents] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
-  // Selected student for View Details
+  // Student selected for View Details
   const [selectedStudent, setSelectedStudent] = useState(null);
 
   // Get students from backend
@@ -27,6 +26,8 @@ function App() {
 
       if (data.success) {
         setStudents(data.students);
+      } else {
+        console.error("Failed to get students:", data.message);
       }
     } catch (error) {
       console.error("Error fetching students:", error);
@@ -99,28 +100,33 @@ function App() {
         // Exit edit mode
         setEditingId(null);
 
-        // Refresh students
+        // Refresh student list
         getStudents();
       } else {
-        alert(data.error || data.message || "Something went wrong");
+        alert(data.message || data.error || "Something went wrong");
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Submit error:", error);
       alert("Server error");
     }
   };
 
   // Edit student
-  const handleEdit = (student) => {
+  const handleEdit = (studentData) => {
+    console.log("Editing student:", studentData);
+
     setStudent({
-      name: student.name,
-      email: student.email,
-      rollNumber: student.rollNumber,
-      department: student.department,
-      year: student.year,
+      name: studentData.name,
+      email: studentData.email,
+      rollNumber: studentData.rollNumber,
+      department: studentData.department,
+      year: studentData.year,
     });
 
-    setEditingId(student._id);
+    setEditingId(studentData._id);
+
+    // Close View Details if open
+    setSelectedStudent(null);
   };
 
   // Delete student
@@ -140,10 +146,13 @@ function App() {
       if (data.success) {
         alert("Student deleted successfully!");
 
+        // Close details if deleted student was selected
+        setSelectedStudent(null);
+
         // Refresh students
         getStudents();
       } else {
-        alert(data.error || "Failed to delete student");
+        alert(data.message || data.error || "Failed to delete student");
       }
     } catch (error) {
       console.error("Delete error:", error);
@@ -165,9 +174,10 @@ function App() {
   };
 
   // View student details
-  const handleView = (student) => {
-    console.log("Selected student:", student);
-    setSelectedStudent(student);
+  const handleView = (studentData) => {
+    console.log("Selected student:", studentData);
+
+    setSelectedStudent(studentData);
   };
 
   // Close student details
@@ -179,6 +189,7 @@ function App() {
     <div className="container">
       <h1>Smart Campus Management</h1>
 
+      {/* Add / Edit Student */}
       <h2>{editingId ? "Edit Student" : "Add Student"}</h2>
 
       <form onSubmit={handleSubmit}>
@@ -238,6 +249,7 @@ function App() {
         )}
       </form>
 
+      {/* Student List */}
       <h2>Student List</h2>
 
       {students.length === 0 ? (
@@ -266,50 +278,56 @@ function App() {
                 <strong>Year:</strong> {s.year}
               </p>
 
-              <button onClick={() => handleView(s)}>
-                View Details
-              </button>
+              <div className="button-group">
+                <button onClick={() => handleView(s)}>
+                  View Details
+                </button>
 
-              <button onClick={() => handleEdit(s)}>
-                Edit
-              </button>
+                <button onClick={() => handleEdit(s)}>
+                  Edit
+                </button>
 
-              <button onClick={() => handleDelete(s._id)}>
-                Delete
-              </button>
+                <button onClick={() => handleDelete(s._id)}>
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
 
       {/* View Student Details */}
-      {selectedStudent && (
-        <div className="student-details">
-          <h2>Student Details</h2>
+      {selectedStudent !== null && (
+        <div className="details-container">
+          <div className="student-details">
+            <h2>Student Details</h2>
 
-          <p>
-            <strong>Name:</strong> {selectedStudent.name}
-          </p>
+            <p>
+              <strong>Name:</strong> {selectedStudent.name}
+            </p>
 
-          <p>
-            <strong>Email:</strong> {selectedStudent.email}
-          </p>
+            <p>
+              <strong>Email:</strong> {selectedStudent.email}
+            </p>
 
-          <p>
-            <strong>Roll Number:</strong> {selectedStudent.rollNumber}
-          </p>
+            <p>
+              <strong>Roll Number:</strong>{" "}
+              {selectedStudent.rollNumber}
+            </p>
 
-          <p>
-            <strong>Department:</strong> {selectedStudent.department}
-          </p>
+            <p>
+              <strong>Department:</strong>{" "}
+              {selectedStudent.department}
+            </p>
 
-          <p>
-            <strong>Year:</strong> {selectedStudent.year}
-          </p>
+            <p>
+              <strong>Year:</strong> {selectedStudent.year}
+            </p>
 
-          <button onClick={handleCloseDetails}>
-            Close
-          </button>
+            <button onClick={handleCloseDetails}>
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>

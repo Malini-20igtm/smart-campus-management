@@ -73,3 +73,28 @@ button:hover {
 .student-card p {
   margin: 8px 0;
 }
+.details-container {
+  margin-top: 30px;
+  padding: 20px;
+  border: 2px solid #333;
+  border-radius: 10px;
+  background-color: white;
+}
+
+.student-details {
+  padding: 20px;
+}
+
+.student-details h2 {
+  margin-bottom: 20px;
+}
+
+.student-details p {
+  margin: 10px 0;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
