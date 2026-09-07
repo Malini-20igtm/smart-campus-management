@@ -11,6 +11,7 @@ function App() {
   });
 
   const [students, setStudents] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
@@ -86,7 +87,6 @@ function App() {
             : "Student added successfully!"
         );
 
-        // Clear form
         setStudent({
           name: "",
           email: "",
@@ -95,10 +95,8 @@ function App() {
           year: "",
         });
 
-        // Exit edit mode
         setEditingId(null);
 
-        // Refresh list
         getStudents();
       } else {
         alert(data.message || data.error || "Something went wrong");
@@ -123,7 +121,6 @@ function App() {
 
     setEditingId(studentData._id);
 
-    // Close details
     setSelectedStudent(null);
   };
 
@@ -176,10 +173,23 @@ function App() {
     setSelectedStudent(studentData);
   };
 
-  // Close details
+  // Close student details
   const handleCloseDetails = () => {
     setSelectedStudent(null);
   };
+
+  // Search students
+  const filteredStudents = students.filter((s) => {
+    const search = searchTerm.toLowerCase();
+
+    return (
+      s.name.toLowerCase().includes(search) ||
+      s.email.toLowerCase().includes(search) ||
+      s.rollNumber.toLowerCase().includes(search) ||
+      s.department.toLowerCase().includes(search) ||
+      s.year.toLowerCase().includes(search)
+    );
+  });
 
   return (
     <div className="container">
@@ -248,11 +258,26 @@ function App() {
       {/* Student List */}
       <h2>Student List</h2>
 
-      {students.length === 0 ? (
+      {/* Search Box */}
+      <input
+        type="text"
+        placeholder="Search by name, email, roll number, department or year"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{
+          width: "100%",
+          padding: "12px",
+          marginBottom: "20px",
+          boxSizing: "border-box",
+        }}
+      />
+
+      {/* Filtered Students */}
+      {filteredStudents.length === 0 ? (
         <p>No students found.</p>
       ) : (
         <div>
-          {students.map((s) => (
+          {filteredStudents.map((s) => (
             <div className="student-card" key={s._id}>
               <p>
                 <strong>Name:</strong> {s.name}
@@ -301,9 +326,6 @@ function App() {
             border: "3px solid black",
             borderRadius: "10px",
             backgroundColor: "white",
-            display: "block",
-            visibility: "visible",
-            opacity: 1,
           }}
         >
           <h2>Student Details</h2>
