@@ -12,11 +12,9 @@ function App() {
 
   const [students, setStudents] = useState([]);
   const [editingId, setEditingId] = useState(null);
-
-  // Student selected for View Details
   const [selectedStudent, setSelectedStudent] = useState(null);
 
-  // Get students from backend
+  // Get all students
   const getStudents = async () => {
     try {
       const response = await fetch("http://localhost:5000/api/students");
@@ -27,7 +25,7 @@ function App() {
       if (data.success) {
         setStudents(data.students);
       } else {
-        console.error("Failed to get students:", data.message);
+        console.error("Failed to fetch students:", data.message);
       }
     } catch (error) {
       console.error("Error fetching students:", error);
@@ -100,7 +98,7 @@ function App() {
         // Exit edit mode
         setEditingId(null);
 
-        // Refresh student list
+        // Refresh list
         getStudents();
       } else {
         alert(data.message || data.error || "Something went wrong");
@@ -125,7 +123,7 @@ function App() {
 
     setEditingId(studentData._id);
 
-    // Close View Details if open
+    // Close details
     setSelectedStudent(null);
   };
 
@@ -146,10 +144,8 @@ function App() {
       if (data.success) {
         alert("Student deleted successfully!");
 
-        // Close details if deleted student was selected
         setSelectedStudent(null);
 
-        // Refresh students
         getStudents();
       } else {
         alert(data.message || data.error || "Failed to delete student");
@@ -180,7 +176,7 @@ function App() {
     setSelectedStudent(studentData);
   };
 
-  // Close student details
+  // Close details
   const handleCloseDetails = () => {
     setSelectedStudent(null);
   };
@@ -297,37 +293,46 @@ function App() {
       )}
 
       {/* View Student Details */}
-      {selectedStudent !== null && (
-        <div className="details-container">
-          <div className="student-details">
-            <h2>Student Details</h2>
+      {selectedStudent && (
+        <div
+          style={{
+            marginTop: "30px",
+            padding: "25px",
+            border: "3px solid black",
+            borderRadius: "10px",
+            backgroundColor: "white",
+            display: "block",
+            visibility: "visible",
+            opacity: 1,
+          }}
+        >
+          <h2>Student Details</h2>
 
-            <p>
-              <strong>Name:</strong> {selectedStudent.name}
-            </p>
+          <p>
+            <strong>Name:</strong> {selectedStudent.name}
+          </p>
 
-            <p>
-              <strong>Email:</strong> {selectedStudent.email}
-            </p>
+          <p>
+            <strong>Email:</strong> {selectedStudent.email}
+          </p>
 
-            <p>
-              <strong>Roll Number:</strong>{" "}
-              {selectedStudent.rollNumber}
-            </p>
+          <p>
+            <strong>Roll Number:</strong>{" "}
+            {selectedStudent.rollNumber}
+          </p>
 
-            <p>
-              <strong>Department:</strong>{" "}
-              {selectedStudent.department}
-            </p>
+          <p>
+            <strong>Department:</strong>{" "}
+            {selectedStudent.department}
+          </p>
 
-            <p>
-              <strong>Year:</strong> {selectedStudent.year}
-            </p>
+          <p>
+            <strong>Year:</strong> {selectedStudent.year}
+          </p>
 
-            <button onClick={handleCloseDetails}>
-              Close
-            </button>
-          </div>
+          <button onClick={handleCloseDetails}>
+            Close
+          </button>
         </div>
       )}
     </div>
