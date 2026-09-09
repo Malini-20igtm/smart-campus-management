@@ -1,27 +1,56 @@
-const express = require("express");
-const cors = require("cors");
-const mongoose = require("mongoose");
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import mongoose from "mongoose";
 
-const Student = require("./models/student");
+import Student from "./models/Student.js";
+import Attendance from "./models/Attendance.js";
+
+dotenv.config();
 
 const app = express();
+const PORT = 5000;
 
-app.use(cors());
+// Middleware
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
+
 app.use(express.json());
 
-// MongoDB connection
+// MongoDB URL
+const MONGO_URL =
+  process.env.MONGO || "mongodb://127.0.0.1:27017/contactDB";
+
+// Connect MongoDB
 mongoose
-  .connect("mongodb://127.0.0.1:27017/smartCampus")
+  .connect(MONGO_URL)
   .then(() => {
     console.log("Database Connected");
   })
   .catch((error) => {
-    console.log("Database Connection Error:", error);
+    console.error("MongoDB Connection Error:", error);
   });
 
-// Campus API
+
+// ===============================
+// HOME API
+// ===============================
+
+app.get("/", (req, res) => {
+  res.send("Smart Campus Backend is Running");
+});
+
+
+// ===============================
+// CAMPUS API
+// ===============================
+
 app.get("/api/campus", (req, res) => {
   res.json({
+    success: true,
     college: "Smart Campus College",
     students: 500,
     faculty: 50,
@@ -29,15 +58,12 @@ app.get("/api/campus", (req, res) => {
   });
 });
 
-// Home API
-app.get("/", (req, res) => {
-  res.json({
-    message: "Welcome to Smart Campus Management",
-    status: "success",
-  });
-});
 
-// Get all students
+// ===============================
+// STUDENT APIs
+// ===============================
+
+// GET ALL STUDENTS
 app.get("/api/students", async (req, res) => {
   try {
     const students = await Student.find();
@@ -47,16 +73,17 @@ app.get("/api/students", async (req, res) => {
       students,
     });
   } catch (error) {
-    console.error("GET STUDENTS ERROR:", error);
+    console.error("Error fetching students:", error);
 
     res.status(500).json({
       success: false,
-      message: error.message,
+      error: "Internal Server Error",
     });
   }
 });
 
-// Add student
+
+// ADD STUDENT
 app.post("/api/students", async (req, res) => {
   try {
     const { name, email, rollNumber, department, year } = req.body;
@@ -64,7 +91,7 @@ app.post("/api/students", async (req, res) => {
     if (!name || !email || !rollNumber || !department || !year) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required",
+        error: "All fields are required.",
       });
     }
 
@@ -76,64 +103,33 @@ app.post("/api/students", async (req, res) => {
       year,
     });
 
-    const savedStudent = await student.save();
+    await student.save();
 
     res.status(201).json({
       success: true,
       message: "Student added successfully",
-      student: savedStudent,
+      student,
     });
   } catch (error) {
-    console.error("POST STUDENT ERROR:", error);
+    console.error("Error adding student:", error);
 
     res.status(500).json({
       success: false,
-      message: error.message,
+      error: "Internal Server Error",
     });
   }
 });
 
-// Delete student
-app.delete("/api/students/:id", async (req, res) => {
-  try {
-    const deletedStudent = await Student.findByIdAndDelete(req.params.id);
 
-    if (!deletedStudent) {
-      return res.status(404).json({
-        success: false,
-        message: "Student not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "Student deleted successfully",
-    });
-  } catch (error) {
-    console.error("DELETE STUDENT ERROR:", error);
-
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
-  }
-});
-
-// Update student
+// UPDATE STUDENT
 app.put("/api/students/:id", async (req, res) => {
   try {
+    const { id } = req.params;
+
     const { name, email, rollNumber, department, year } = req.body;
 
-    // Check all fields
-    if (!name || !email || !rollNumber || !department || !year) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required",
-      });
-    }
-
-    const updatedStudent = await Student.findByIdAndUpdate(
-      req.params.id,
+    const student = await Student.findByIdAndUpdate(
+      id,
       {
         name,
         email,
@@ -146,30 +142,122 @@ app.put("/api/students/:id", async (req, res) => {
       }
     );
 
-    if (!updatedStudent) {
+    if (!student) {
       return res.status(404).json({
         success: false,
-        message: "Student not found",
+        error: "Student not found",
       });
     }
 
     res.json({
       success: true,
       message: "Student updated successfully",
-      student: updatedStudent,
+      student,
     });
   } catch (error) {
-    console.error("UPDATE STUDENT ERROR:", error);
+    console.error("Error updating student:", error);
 
     res.status(500).json({
       success: false,
-      message: error.message,
+      error: "Internal Server Error",
     });
   }
 });
 
-// Start server
-const PORT = 5000;
+
+// DELETE STUDENT
+app.delete("/api/students/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const student = await Student.findByIdAndDelete(id);
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        error: "Student not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Student deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting student:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+    });
+  }
+});
+
+
+// ===============================
+// DAY 16 - ATTENDANCE APIs
+// ===============================
+
+// MARK ATTENDANCE
+app.post("/api/attendance", async (req, res) => {
+  try {
+    const { studentId, status } = req.body;
+
+    if (!studentId || !status) {
+      return res.status(400).json({
+        success: false,
+        error: "Student and attendance status are required.",
+      });
+    }
+
+    const attendance = new Attendance({
+      studentId,
+      status,
+    });
+
+    await attendance.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Attendance marked successfully",
+      attendance,
+    });
+  } catch (error) {
+    console.error("Error marking attendance:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+    });
+  }
+});
+
+
+// GET ATTENDANCE
+app.get("/api/attendance", async (req, res) => {
+  try {
+    const attendance = await Attendance.find()
+      .populate("studentId")
+      .sort({ date: -1 });
+
+    res.json({
+      success: true,
+      attendance,
+    });
+  } catch (error) {
+    console.error("Error fetching attendance:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+    });
+  }
+});
+
+
+// ===============================
+// START SERVER
+// ===============================
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
