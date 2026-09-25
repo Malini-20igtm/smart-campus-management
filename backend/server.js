@@ -11,7 +11,10 @@ dotenv.config();
 const app = express();
 const PORT = 5000;
 
-// Middleware
+// ===============================
+// MIDDLEWARE
+// ===============================
+
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -20,11 +23,17 @@ app.use(
 
 app.use(express.json());
 
-// MongoDB URL
+// ===============================
+// MONGODB URL
+// ===============================
+
 const MONGO_URL =
   process.env.MONGO || "mongodb://127.0.0.1:27017/contactDB";
 
-// Connect MongoDB
+// ===============================
+// CONNECT MONGODB
+// ===============================
+
 mongoose
   .connect(MONGO_URL)
   .then(() => {
@@ -34,7 +43,6 @@ mongoose
     console.error("MongoDB Connection Error:", error);
   });
 
-
 // ===============================
 // HOME API
 // ===============================
@@ -42,7 +50,6 @@ mongoose
 app.get("/", (req, res) => {
   res.send("Smart Campus Backend is Running");
 });
-
 
 // ===============================
 // CAMPUS API
@@ -58,12 +65,12 @@ app.get("/api/campus", (req, res) => {
   });
 });
 
-
 // ===============================
 // STUDENT APIs
 // ===============================
 
 // GET ALL STUDENTS
+
 app.get("/api/students", async (req, res) => {
   try {
     const students = await Student.find();
@@ -82,8 +89,10 @@ app.get("/api/students", async (req, res) => {
   }
 });
 
-
+// ===============================
 // ADD STUDENT
+// ===============================
+
 app.post("/api/students", async (req, res) => {
   try {
     const { name, email, rollNumber, department, year } = req.body;
@@ -120,8 +129,10 @@ app.post("/api/students", async (req, res) => {
   }
 });
 
-
+// ===============================
 // UPDATE STUDENT
+// ===============================
+
 app.put("/api/students/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -164,8 +175,10 @@ app.put("/api/students/:id", async (req, res) => {
   }
 });
 
-
+// ===============================
 // DELETE STUDENT
+// ===============================
+
 app.delete("/api/students/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -193,12 +206,12 @@ app.delete("/api/students/:id", async (req, res) => {
   }
 });
 
-
 // ===============================
 // DAY 16 - ATTENDANCE APIs
 // ===============================
 
 // MARK ATTENDANCE
+
 app.post("/api/attendance", async (req, res) => {
   try {
     const { studentId, status } = req.body;
@@ -232,8 +245,10 @@ app.post("/api/attendance", async (req, res) => {
   }
 });
 
+// ===============================
+// GET ALL ATTENDANCE
+// ===============================
 
-// GET ATTENDANCE
 app.get("/api/attendance", async (req, res) => {
   try {
     const attendance = await Attendance.find()
@@ -254,6 +269,32 @@ app.get("/api/attendance", async (req, res) => {
   }
 });
 
+// ===============================
+// DAY 17
+// GET ATTENDANCE FOR A SPECIFIC STUDENT
+// ===============================
+
+app.get("/api/attendance/student/:studentId", async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    const attendance = await Attendance.find({ studentId })
+      .populate("studentId")
+      .sort({ date: -1 });
+
+    res.json({
+      success: true,
+      attendance,
+    });
+  } catch (error) {
+    console.error("Error fetching student attendance:", error);
+
+    res.status(500).json({
+      success: false,
+      error: "Internal Server Error",
+    });
+  }
+});
 
 // ===============================
 // START SERVER
