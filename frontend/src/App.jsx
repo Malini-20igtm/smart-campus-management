@@ -3,6 +3,10 @@ import { useEffect, useState } from "react";
 function App() {
   const [attendance, setAttendance] = useState([]);
 
+  const [studentName, setStudentName] = useState("");
+  const [rollNumber, setRollNumber] = useState("");
+  const [status, setStatus] = useState("Present");
+
   // Get attendance
   const getAttendance = () => {
     fetch("http://localhost:5000/api/attendance")
@@ -21,21 +25,32 @@ function App() {
 
   // Add attendance
   const addAttendance = () => {
+    // Validation
+    if (studentName === "" || rollNumber === "") {
+      alert("Please enter Student Name and Roll Number");
+      return;
+    }
+
     fetch("http://localhost:5000/api/attendance", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        studentName: "Thor",
-        rollNumber: "56",
-        status: "Present",
-        date: "9/26/2026",
+        studentName: studentName,
+        rollNumber: rollNumber,
+        status: status,
+        date: new Date().toLocaleDateString(),
       }),
     })
       .then((response) => response.json())
       .then((data) => {
         console.log("Attendance added:", data);
+
+        // Clear form
+        setStudentName("");
+        setRollNumber("");
+        setStatus("Present");
 
         // Get updated attendance
         getAttendance();
@@ -51,6 +66,41 @@ function App() {
 
       <h2>Attendance Records</h2>
 
+      {/* Student Name */}
+      <input
+        type="text"
+        placeholder="Student Name"
+        value={studentName}
+        onChange={(e) => setStudentName(e.target.value)}
+      />
+
+      <br />
+      <br />
+
+      {/* Roll Number */}
+      <input
+        type="text"
+        placeholder="Roll Number"
+        value={rollNumber}
+        onChange={(e) => setRollNumber(e.target.value)}
+      />
+
+      <br />
+      <br />
+
+      {/* Status */}
+      <select
+        value={status}
+        onChange={(e) => setStatus(e.target.value)}
+      >
+        <option value="Present">Present</option>
+        <option value="Absent">Absent</option>
+      </select>
+
+      <br />
+      <br />
+
+      {/* Add Attendance Button */}
       <button onClick={addAttendance}>
         Add Attendance
       </button>
@@ -58,6 +108,7 @@ function App() {
       <br />
       <br />
 
+      {/* Attendance Table */}
       {attendance.length === 0 ? (
         <p>No attendance records found.</p>
       ) : (
